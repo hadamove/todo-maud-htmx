@@ -1,6 +1,6 @@
 use maud::{html, Markup, DOCTYPE};
 
-pub(crate) fn base_view(title: &str, content: Markup) -> Markup {
+pub fn base_view(title: &str, content: Markup) -> Markup {
     html! {
         (DOCTYPE)
         html class="no-js" lang="en" {

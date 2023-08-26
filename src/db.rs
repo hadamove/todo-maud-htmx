@@ -17,7 +17,7 @@ pub struct Database {
 
 impl Database {
     pub async fn init_db() -> anyhow::Result<Database> {
-        let database_url = std::env::var("DATABASE_URL").expect("DATABASE_URL must be set");
+        let database_url = std::env::var("DATABASE_URL")?;
 
         let sqlite_options =
             SqliteConnectOptions::from_str(database_url.as_str())?.create_if_missing(true);
@@ -52,6 +52,7 @@ impl Database {
             r#"
             SELECT id, text, is_done
             FROM todos
+            ORDER BY id DESC
             "#
         )
         .fetch_all(&self.pool)

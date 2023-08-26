@@ -1,5 +1,5 @@
 use actix_files::Files as ActixFiles;
-use actix_web::{get, post, web, App, HttpServer, Result as ActixResult};
+use actix_web::{delete, get, post, web, App, HttpResponse, HttpServer, Result as ActixResult};
 use db::Database;
 use maud::{html, Markup};
 
@@ -14,9 +14,17 @@ pub async fn index(db: web::Data<Database>) -> ActixResult<Markup> {
 
     let title = "Todo list";
     let content = html! {
-        h1 { "Todo list" }
-        (views::add_todo_view())
-        (views::todos_view(todos))
+        div class="container mx-auto " {
+            div class="max-w-md mx-auto my-10 bg-slate-100 p-5 rounded-lg"{
+                h1 class="text-2xl font-bold text-center" {
+                    "Items"
+                }
+                div class="p-5 flex flex-col gap-4" {
+                    (views::todos_view(todos))
+                    (views::add_todo_view())
+                }
+            }
+        }
     };
 
     Ok(views::base_view(title, content))
@@ -45,7 +53,45 @@ async fn toggle_done(db: web::Data<Database>, path: web::Path<i64>) -> ActixResu
     };
     let todo = db.update(todo).await.unwrap();
 
-    println!("Toggled todo {} to {}", todo.id, todo.is_done);
+    Ok(views::todo_view(todo))
+}
+
+#[delete("/delete/{id}")]
+async fn delete(db: web::Data<Database>, path: web::Path<i64>) -> HttpResponse {
+    let id = path.into_inner();
+
+    db.delete(id).await.unwrap();
+
+    HttpResponse::Ok().finish()
+}
+
+#[get("/start_edit/{id}")]
+async fn start_edit(db: web::Data<Database>, path: web::Path<i64>) -> ActixResult<Markup> {
+    let id = path.into_inner();
+    let todo = db.get_by_id(id).await.unwrap();
+
+    Ok(views::edit_todo_view(todo))
+}
+
+#[derive(serde::Deserialize)]
+pub struct EditForm {
+    text: String,
+}
+
+#[post("/update/{id}")]
+async fn update(
+    db: web::Data<Database>,
+    path: web::Path<i64>,
+    form: web::Form<EditForm>,
+) -> ActixResult<Markup> {
+    let id = path.into_inner();
+    let todo = db.get_by_id(id).await.unwrap();
+
+    let todo = Todo {
+        text: form.text.clone(),
+        ..todo
+    };
+    let todo = db.update(todo).await.unwrap();
 
     Ok(views::todo_view(todo))
 }
@@ -55,14 +101,15 @@ async fn main() -> std::io::Result<()> {
     dotenv::dotenv().ok();
     let database = Database::init_db().await.unwrap();
 
-    println!("Listening on http://localhost:8080");
-
     HttpServer::new(move || {
         App::new()
             .app_data(web::Data::new(database.clone()))
             .service(index)
             .service(add)
             .service(toggle_done)
+            .service(delete)
+            .service(start_edit)
+            .service(update)
             .service(ActixFiles::new("/", "./src/static").prefer_utf8(true))
     })
     .bind(("127.0.0.1", 8080))?

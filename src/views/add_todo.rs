@@ -1,11 +1,16 @@
 use maud::{html, Markup};
 
-pub(crate) fn add_todo_view() -> Markup {
+pub fn add_todo_view() -> Markup {
     html! {
-        div {
-            form hx-post="/add" hx-target="#todo-list" hx-swap="afterbegin" {
-                input type="text" name="text" placeholder="What needs to be done?" {}
-                button type="submit" { "Add" }
+        div class="p-1 bg-white rounded-md" {
+            form
+                class="flex items-center gap-2"
+                hx-post="/add"
+                hx-target="#todo-list"
+                hx-swap="afterbegin"
+            {
+                input class="flex-grow rounded-sm" type="text" name="text" placeholder="What needs to be done?" {}
+                button type="submit" class="ml-auto" { "➕" }
             }
         }
     }
