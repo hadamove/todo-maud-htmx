@@ -90,19 +90,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "actix-maud-htmx-h5bp"
-version = "0.1.1"
-dependencies = [
- "actix-files",
- "actix-web",
- "anyhow",
- "dotenv",
- "maud",
- "serde",
- "sqlx",
-]
-
-[[package]]
 name = "actix-router"
 version = "0.5.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1423,6 +1410,19 @@ dependencies = [
  "spki",
  "subtle",
  "zeroize",
+]
+
+[[package]]
+name = "rust-htmx-todos"
+version = "0.1.1"
+dependencies = [
+ "actix-files",
+ "actix-web",
+ "anyhow",
+ "dotenv",
+ "maud",
+ "serde",
+ "sqlx",
 ]
 
 [[package]]

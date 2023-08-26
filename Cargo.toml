@@ -1,5 +1,5 @@
 [package]
-name = "actix-maud-htmx-h5bp"
+name = "rust-htmx-todos"
 version = "0.1.1"
 edition = "2021"
 
