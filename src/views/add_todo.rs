@@ -9,7 +9,7 @@ pub fn add_todo_view() -> Markup {
                 hx-target="#todo-list"
                 hx-swap="afterbegin"
             {
-                input class="flex-grow rounded-sm" type="text" name="text" placeholder="What needs to be done?" {}
+                input class="flex-grow rounded-sm mx-1" type="text" name="text" placeholder="What needs to be done?" {}
                 button type="submit" class="ml-auto" { "➕" }
             }
         }

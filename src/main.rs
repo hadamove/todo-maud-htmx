@@ -21,6 +21,7 @@ pub async fn index(db: web::Data<Database>) -> ActixResult<Markup> {
                 }
                 div class="p-5 flex flex-col gap-4" {
                     (views::todos_view(todos))
+                    (views::clear_view())
                     (views::add_todo_view())
                 }
             }
@@ -96,6 +97,15 @@ async fn update(
     Ok(views::todo_view(todo))
 }
 
+#[post("/clear")]
+async fn clear(db: web::Data<Database>) -> ActixResult<Markup> {
+    db.delete_all_done().await.unwrap();
+
+    let todos = db.get_all().await.unwrap();
+
+    Ok(views::todos_view(todos))
+}
+
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
     dotenv::dotenv().ok();
@@ -110,6 +120,7 @@ async fn main() -> std::io::Result<()> {
             .service(delete)
             .service(start_edit)
             .service(update)
+            .service(clear)
             .service(ActixFiles::new("/", "./src/static").prefer_utf8(true))
     })
     .bind(("127.0.0.1", 8080))?

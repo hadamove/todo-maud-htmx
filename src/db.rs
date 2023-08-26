@@ -107,4 +107,17 @@ impl Database {
 
         Ok(())
     }
+
+    pub async fn delete_all_done(&self) -> Result<(), sqlx::Error> {
+        sqlx::query!(
+            r#"
+            DELETE FROM todos
+            WHERE is_done = 1
+            "#
+        )
+        .execute(&self.pool)
+        .await?;
+
+        Ok(())
+    }
 }
