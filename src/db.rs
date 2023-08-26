@@ -3,20 +3,11 @@ use std::str::FromStr;
 use serde::{Deserialize, Serialize};
 use sqlx::sqlite::{SqliteConnectOptions, SqlitePoolOptions};
 
-#[derive(Debug, Serialize, Deserialize, sqlx::Type)]
-#[serde(rename_all = "lowercase")]
-pub enum ItemStatus {
-    Todo,
-    InProgress,
-    Done,
-}
-
 #[derive(Debug, Serialize, Deserialize, sqlx::FromRow)]
-pub struct Item {
+pub struct Todo {
     pub id: i64,
-    pub name: String,
-    pub description: String,
-    pub status: ItemStatus,
+    pub text: String,
+    pub is_done: bool,
 }
 
 #[derive(Clone)]
@@ -41,42 +32,40 @@ impl Database {
         Ok(Database { pool })
     }
 
-    pub async fn insert(&self, item: Item) -> Result<Item, sqlx::Error> {
+    pub async fn insert(&self, text: String) -> Result<Todo, sqlx::Error> {
         sqlx::query_as!(
-            Item,
+            Todo,
             r#"
-            INSERT INTO items (name, description, status)
-            VALUES ($1, $2, $3)
-            RETURNING id, name, description, status as "status!: ItemStatus"
+            INSERT INTO todos (text)
+            VALUES ($1)
+            RETURNING id, text, is_done
             "#,
-            item.name,
-            item.description,
-            item.status
+            text
         )
         .fetch_one(&self.pool)
         .await
     }
 
-    pub async fn get_all(&self) -> Result<Vec<Item>, sqlx::Error> {
-        let items = sqlx::query_as!(
-            Item,
+    pub async fn get_all(&self) -> Result<Vec<Todo>, sqlx::Error> {
+        let todos = sqlx::query_as!(
+            Todo,
             r#"
-            SELECT id, name, description, status as "status!: ItemStatus"
-            FROM items
+            SELECT id, text, is_done
+            FROM todos
             "#
         )
         .fetch_all(&self.pool)
         .await?;
 
-        Ok(items)
+        Ok(todos)
     }
 
-    pub async fn get_by_id(&self, id: i64) -> Result<Item, sqlx::Error> {
-        let item = sqlx::query_as!(
-            Item,
+    pub async fn get_by_id(&self, id: i64) -> Result<Todo, sqlx::Error> {
+        let todo = sqlx::query_as!(
+            Todo,
             r#"
-            SELECT id, name, description, status as "status!: ItemStatus"
-            FROM items
+            SELECT id, text, is_done
+            FROM todos
             WHERE id = $1
             "#,
             id
@@ -84,31 +73,30 @@ impl Database {
         .fetch_one(&self.pool)
         .await?;
 
-        Ok(item)
+        Ok(todo)
     }
 
-    pub async fn update(&self, item: Item) -> Result<(), sqlx::Error> {
+    pub async fn update(&self, todo: Todo) -> Result<Todo, sqlx::Error> {
         sqlx::query!(
             r#"
-            UPDATE items
-            SET name = $2, description = $3, status = $4
+            UPDATE todos
+            SET text = $2, is_done = $3
             WHERE id = $1
             "#,
-            item.id,
-            item.name,
-            item.description,
-            item.status
+            todo.id,
+            todo.text,
+            todo.is_done
         )
         .execute(&self.pool)
         .await?;
 
-        Ok(())
+        Ok(todo)
     }
 
     pub async fn delete(&self, id: i64) -> Result<(), sqlx::Error> {
         sqlx::query!(
             r#"
-            DELETE FROM items
+            DELETE FROM todos
             WHERE id = $1
             "#,
             id
