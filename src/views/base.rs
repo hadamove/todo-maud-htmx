@@ -1,5 +1,7 @@
 use maud::{html, Markup, DOCTYPE};
 
+// Feel free to update this function to your needs.
+// For styling, you can either put your own CSS in static/css/ or use Tailwind CSS.
 pub fn base_view(title: &str, content: Markup) -> Markup {
     html! {
         (DOCTYPE)

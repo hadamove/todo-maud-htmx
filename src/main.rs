@@ -111,6 +111,7 @@ async fn main() -> std::io::Result<()> {
     dotenv::dotenv().ok();
     let database = Repository::try_init().await.unwrap();
 
+    println!("Starting server at http://localhost:8080");
     HttpServer::new(move || {
         App::new()
             .app_data(web::Data::new(database.clone()))

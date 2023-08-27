@@ -15,6 +15,8 @@ pub struct Repository {
     pool: sqlx::SqlitePool,
 }
 
+// Basic CRUD operations, nothing fancy here.
+// Feel free to add more methods if you need them.
 impl Repository {
     pub async fn try_init() -> anyhow::Result<Repository> {
         let database_url = std::env::var("DATABASE_URL")?;
