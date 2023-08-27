@@ -1,7 +1,5 @@
-use std::str::FromStr;
-
 use serde::{Deserialize, Serialize};
-use sqlx::sqlite::{SqliteConnectOptions, SqlitePoolOptions};
+use sqlx::sqlite::SqlitePoolOptions;
 
 #[derive(Debug, Serialize, Deserialize, sqlx::FromRow)]
 pub struct Todo {
