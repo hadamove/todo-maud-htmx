@@ -8,6 +8,7 @@ pub fn add_todo_view() -> Markup {
                 hx-post="/add"
                 hx-target="#todo-list"
                 hx-swap="afterbegin"
+                hx-on="htmx:afterRequest: this.reset();"
             {
                 input class="flex-grow rounded-sm mx-1" type="text" name="text" placeholder="What needs to be done?" {}
                 button type="submit" class="ml-auto" { "➕" }
