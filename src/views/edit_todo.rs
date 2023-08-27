@@ -1,6 +1,6 @@
 use maud::{html, Markup};
 
-use crate::db::Todo;
+use crate::repository::Todo;
 
 pub fn edit_todo_view(todo: Todo) -> Markup {
     let id = format!("todo-edit-{}", todo.id);

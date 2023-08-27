@@ -11,12 +11,12 @@ pub struct Todo {
 }
 
 #[derive(Clone)]
-pub struct Database {
+pub struct Repository {
     pool: sqlx::SqlitePool,
 }
 
-impl Database {
-    pub async fn init_db() -> anyhow::Result<Database> {
+impl Repository {
+    pub async fn try_init() -> anyhow::Result<Repository> {
         let database_url = std::env::var("DATABASE_URL")?;
 
         let sqlite_options =
@@ -29,7 +29,7 @@ impl Database {
 
         sqlx::migrate!("db/migrations").run(&pool).await?;
 
-        Ok(Database { pool })
+        Ok(Repository { pool })
     }
 
     pub async fn insert(&self, text: String) -> Result<Todo, sqlx::Error> {

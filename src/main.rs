@@ -1,15 +1,15 @@
 use actix_files::Files as ActixFiles;
 use actix_web::{delete, get, post, web, App, HttpResponse, HttpServer, Result as ActixResult};
-use db::Database;
 use maud::{html, Markup};
+use repository::Repository;
 
-use crate::db::Todo;
+use crate::repository::Todo;
 
-mod db;
+mod repository;
 mod views;
 
 #[get("/")]
-pub async fn index(db: web::Data<Database>) -> ActixResult<Markup> {
+pub async fn index(db: web::Data<Repository>) -> ActixResult<Markup> {
     let todos = db.get_all().await.unwrap();
 
     let title = "Todo list";
@@ -37,14 +37,14 @@ pub struct AddForm {
 }
 
 #[post("/add")]
-async fn add(db: web::Data<Database>, form: web::Form<AddForm>) -> ActixResult<Markup> {
+async fn add(db: web::Data<Repository>, form: web::Form<AddForm>) -> ActixResult<Markup> {
     let todo = db.insert(form.text.clone()).await.unwrap();
 
     Ok(views::todo_view(todo))
 }
 
 #[post("/toggle_done/{id}")]
-async fn toggle_done(db: web::Data<Database>, path: web::Path<i64>) -> ActixResult<Markup> {
+async fn toggle_done(db: web::Data<Repository>, path: web::Path<i64>) -> ActixResult<Markup> {
     let id = path.into_inner();
     let todo = db.get_by_id(id).await.unwrap();
 
@@ -58,7 +58,7 @@ async fn toggle_done(db: web::Data<Database>, path: web::Path<i64>) -> ActixResu
 }
 
 #[delete("/delete/{id}")]
-async fn delete(db: web::Data<Database>, path: web::Path<i64>) -> HttpResponse {
+async fn delete(db: web::Data<Repository>, path: web::Path<i64>) -> HttpResponse {
     let id = path.into_inner();
 
     db.delete(id).await.unwrap();
@@ -67,7 +67,7 @@ async fn delete(db: web::Data<Database>, path: web::Path<i64>) -> HttpResponse {
 }
 
 #[get("/start_edit/{id}")]
-async fn start_edit(db: web::Data<Database>, path: web::Path<i64>) -> ActixResult<Markup> {
+async fn start_edit(db: web::Data<Repository>, path: web::Path<i64>) -> ActixResult<Markup> {
     let id = path.into_inner();
     let todo = db.get_by_id(id).await.unwrap();
 
@@ -81,7 +81,7 @@ pub struct EditForm {
 
 #[post("/update/{id}")]
 async fn update(
-    db: web::Data<Database>,
+    db: web::Data<Repository>,
     path: web::Path<i64>,
     form: web::Form<EditForm>,
 ) -> ActixResult<Markup> {
@@ -98,7 +98,7 @@ async fn update(
 }
 
 #[post("/clear")]
-async fn clear(db: web::Data<Database>) -> ActixResult<Markup> {
+async fn clear(db: web::Data<Repository>) -> ActixResult<Markup> {
     db.delete_all_done().await.unwrap();
 
     let todos = db.get_all().await.unwrap();
@@ -109,7 +109,7 @@ async fn clear(db: web::Data<Database>) -> ActixResult<Markup> {
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
     dotenv::dotenv().ok();
-    let database = Database::init_db().await.unwrap();
+    let database = Repository::try_init().await.unwrap();
 
     HttpServer::new(move || {
         App::new()
