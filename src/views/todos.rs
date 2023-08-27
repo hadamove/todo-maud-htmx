@@ -7,7 +7,7 @@ pub fn todo_view(todo: Todo) -> Markup {
     let is_checked = todo.is_done.then(|| 1);
 
     html! {
-        div class="flex gap-1 my-1 p-2 items-center bg-white rounded-md" id=(id) {
+        div class="flex gap-1 p-2 items-center bg-white rounded-md" id=(id) {
 
             input type="checkbox" checked=[is_checked]
                 hx-post=(format!("/toggle_done/{}", todo.id))
@@ -40,7 +40,7 @@ pub fn todo_view(todo: Todo) -> Markup {
 pub fn todos_view(todos: Vec<Todo>) -> Markup {
     html! {
         // This is equivalent to: <div id="todo-list">...</div>
-        #todo-list {
+        #todo-list class="flex flex-col gap-2" {
             @for todo in todos {
                 (todo_view(todo))
             }
