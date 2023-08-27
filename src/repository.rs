@@ -21,15 +21,10 @@ impl Repository {
     pub async fn try_init() -> anyhow::Result<Repository> {
         let database_url = std::env::var("DATABASE_URL")?;
 
-        let sqlite_options =
-            SqliteConnectOptions::from_str(database_url.as_str())?.create_if_missing(true);
-
         let pool = SqlitePoolOptions::new()
             .acquire_timeout(std::time::Duration::from_secs(1))
-            .connect_with(sqlite_options)
+            .connect(&database_url)
             .await?;
-
-        sqlx::migrate!("db/migrations").run(&pool).await?;
 
         Ok(Repository { pool })
     }
