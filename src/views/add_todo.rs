@@ -5,7 +5,7 @@ pub fn add_todo_view() -> Markup {
         div class="p-1 bg-white rounded-md" {
             form
                 class="flex items-center gap-2"
-                hx-post="/add"
+                hx-post="/todos"
                 hx-target="#todo-list"
                 hx-swap="afterbegin"
                 hx-on="htmx:afterRequest: this.reset();"

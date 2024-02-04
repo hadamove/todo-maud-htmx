@@ -1,5 +1,7 @@
 use actix_files::Files as ActixFiles;
-use actix_web::{delete, get, post, web, App, HttpResponse, HttpServer, Result as ActixResult};
+use actix_web::{
+    delete, get, patch, post, web, App, HttpResponse, HttpServer, Result as ActixResult,
+};
 use maud::{html, Markup};
 use repository::Repository;
 
@@ -14,7 +16,7 @@ pub async fn index(db: web::Data<Repository>) -> ActixResult<Markup> {
 
     let title = "Todo list";
     let content = html! {
-        div class="container mx-auto " {
+        div class="container mx-auto" {
             div class="max-w-md mx-auto my-10 bg-slate-100 p-5 rounded-lg"{
                 h1 class="text-2xl font-bold text-center" {
                     "Items"
@@ -36,14 +38,14 @@ pub struct AddForm {
     text: String,
 }
 
-#[post("/add")]
-async fn add(db: web::Data<Repository>, form: web::Form<AddForm>) -> ActixResult<Markup> {
+#[post("/todos")]
+async fn add_new(db: web::Data<Repository>, form: web::Form<AddForm>) -> ActixResult<Markup> {
     let todo = db.insert(form.text.clone()).await.unwrap();
 
     Ok(views::todo_view(todo))
 }
 
-#[post("/toggle_done/{id}")]
+#[post("/todos/{id}/toggle_done")]
 async fn toggle_done(db: web::Data<Repository>, path: web::Path<i64>) -> ActixResult<Markup> {
     let id = path.into_inner();
     let todo = db.get_by_id(id).await.unwrap();
@@ -57,16 +59,7 @@ async fn toggle_done(db: web::Data<Repository>, path: web::Path<i64>) -> ActixRe
     Ok(views::todo_view(todo))
 }
 
-#[delete("/delete/{id}")]
-async fn delete(db: web::Data<Repository>, path: web::Path<i64>) -> HttpResponse {
-    let id = path.into_inner();
-
-    db.delete(id).await.unwrap();
-
-    HttpResponse::Ok().finish()
-}
-
-#[get("/start_edit/{id}")]
+#[get("/todos/{id}/edit")]
 async fn start_edit(db: web::Data<Repository>, path: web::Path<i64>) -> ActixResult<Markup> {
     let id = path.into_inner();
     let todo = db.get_by_id(id).await.unwrap();
@@ -75,15 +68,15 @@ async fn start_edit(db: web::Data<Repository>, path: web::Path<i64>) -> ActixRes
 }
 
 #[derive(serde::Deserialize)]
-pub struct EditForm {
+pub struct UpdateForm {
     text: String,
 }
 
-#[post("/update/{id}")]
+#[patch("/todos/{id}")]
 async fn update(
     db: web::Data<Repository>,
     path: web::Path<i64>,
-    form: web::Form<EditForm>,
+    form: web::Form<UpdateForm>,
 ) -> ActixResult<Markup> {
     let id = path.into_inner();
     let todo = db.get_by_id(id).await.unwrap();
@@ -97,8 +90,18 @@ async fn update(
     Ok(views::todo_view(todo))
 }
 
-#[post("/clear")]
-async fn clear(db: web::Data<Repository>) -> ActixResult<Markup> {
+#[delete("/todos/{id}")]
+async fn delete(db: web::Data<Repository>, path: web::Path<i64>) -> HttpResponse {
+    let id = path.into_inner();
+
+    db.delete(id).await.unwrap();
+
+    HttpResponse::Ok().finish()
+}
+
+// TODO: change to query
+#[delete("/todos")]
+async fn delete_all_done(db: web::Data<Repository>) -> ActixResult<Markup> {
     db.delete_all_done().await.unwrap();
 
     let todos = db.get_all().await.unwrap();
@@ -116,12 +119,12 @@ async fn main() -> std::io::Result<()> {
         App::new()
             .app_data(web::Data::new(database.clone()))
             .service(index)
-            .service(add)
+            .service(add_new)
             .service(toggle_done)
-            .service(delete)
             .service(start_edit)
             .service(update)
-            .service(clear)
+            .service(delete)
+            .service(delete_all_done)
             .service(ActixFiles::new("/", "./src/static").prefer_utf8(true))
     })
     .bind(("127.0.0.1", 8080))?
