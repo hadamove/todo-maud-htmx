@@ -97,7 +97,6 @@ async fn delete(db: web::Data<Repository>, path: web::Path<i64>) -> ApiResult<Ht
     Ok(HttpResponse::Ok().finish())
 }
 
-// TODO: change to query
 #[delete("/todos")]
 async fn delete_all_done(db: web::Data<Repository>) -> ApiResult<Markup> {
     db.delete_all_done().await?;
@@ -123,7 +122,6 @@ async fn main() -> std::io::Result<()> {
             .service(update)
             .service(delete)
             .service(delete_all_done)
-            .service(actix_files::Files::new("/", "./src/static").prefer_utf8(true))
     })
     .bind(("127.0.0.1", 8080))?
     .run()
