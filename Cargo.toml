@@ -13,3 +13,4 @@ serde = { version = "1", features = ["derive"] }
 sqlx = { version = "0.7", features = ["runtime-tokio-rustls", "sqlite"] }
 anyhow = "1"
 dotenv = "0.15.0"
+thiserror = "1.0.56"

@@ -15,15 +15,17 @@ pub struct Repository {
 }
 
 impl Repository {
-    pub async fn try_init() -> anyhow::Result<Repository> {
-        let database_url = std::env::var("DATABASE_URL")?;
+    pub async fn init() -> Repository {
+        let database_url = std::env::var("DATABASE_URL")
+            .expect("DATABASE_URL is not set. Check if .env file exists");
 
         let pool = SqlitePoolOptions::new()
             .acquire_timeout(std::time::Duration::from_secs(1))
             .connect(&database_url)
-            .await?;
+            .await
+            .expect("Failed to connect to the database. Check DATABASE_URL in .env file.");
 
-        Ok(Repository { pool })
+        Repository { pool }
     }
 
     pub async fn insert(&self, text: String) -> SqlxResult<Todo> {

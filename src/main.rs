@@ -1,18 +1,16 @@
-use actix_files::Files as ActixFiles;
-use actix_web::{
-    delete, get, patch, post, web, App, HttpResponse, HttpServer, Result as ActixResult,
-};
+use actix_web::{delete, get, patch, post, web, App, HttpResponse, HttpServer};
 use maud::{html, Markup};
-use repository::Repository;
 
-use crate::repository::Todo;
+use crate::error::ApiResult;
+use crate::repository::{Repository, Todo};
 
+mod error;
 mod repository;
 mod views;
 
 #[get("/")]
-pub async fn index(db: web::Data<Repository>) -> ActixResult<Markup> {
-    let todos = db.get_all().await.unwrap();
+pub async fn index(db: web::Data<Repository>) -> ApiResult<Markup> {
+    let todos = db.get_all().await?;
 
     let title = "Todo list";
     let content = html! {
@@ -39,30 +37,30 @@ pub struct AddForm {
 }
 
 #[post("/todos")]
-async fn add_new(db: web::Data<Repository>, form: web::Form<AddForm>) -> ActixResult<Markup> {
-    let todo = db.insert(form.text.clone()).await.unwrap();
+async fn add_new(db: web::Data<Repository>, form: web::Form<AddForm>) -> ApiResult<Markup> {
+    let todo = db.insert(form.into_inner().text).await?;
 
     Ok(views::todo_view(todo))
 }
 
 #[post("/todos/{id}/toggle_done")]
-async fn toggle_done(db: web::Data<Repository>, path: web::Path<i64>) -> ActixResult<Markup> {
+async fn toggle_done(db: web::Data<Repository>, path: web::Path<i64>) -> ApiResult<Markup> {
     let id = path.into_inner();
-    let todo = db.get_by_id(id).await.unwrap();
+    let todo = db.get_by_id(id).await?;
 
     let todo = Todo {
         is_done: !todo.is_done,
         ..todo
     };
-    let todo = db.update(todo).await.unwrap();
+    let todo = db.update(todo).await?;
 
     Ok(views::todo_view(todo))
 }
 
 #[get("/todos/{id}/edit")]
-async fn start_edit(db: web::Data<Repository>, path: web::Path<i64>) -> ActixResult<Markup> {
+async fn start_edit(db: web::Data<Repository>, path: web::Path<i64>) -> ApiResult<Markup> {
     let id = path.into_inner();
-    let todo = db.get_by_id(id).await.unwrap();
+    let todo = db.get_by_id(id).await?;
 
     Ok(views::edit_todo_view(todo))
 }
@@ -77,34 +75,34 @@ async fn update(
     db: web::Data<Repository>,
     path: web::Path<i64>,
     form: web::Form<UpdateForm>,
-) -> ActixResult<Markup> {
+) -> ApiResult<Markup> {
     let id = path.into_inner();
-    let todo = db.get_by_id(id).await.unwrap();
+    let todo = db.get_by_id(id).await?;
 
     let todo = Todo {
-        text: form.text.clone(),
+        text: form.into_inner().text,
         ..todo
     };
-    let todo = db.update(todo).await.unwrap();
+    let todo = db.update(todo).await?;
 
     Ok(views::todo_view(todo))
 }
 
 #[delete("/todos/{id}")]
-async fn delete(db: web::Data<Repository>, path: web::Path<i64>) -> HttpResponse {
+async fn delete(db: web::Data<Repository>, path: web::Path<i64>) -> ApiResult<HttpResponse> {
     let id = path.into_inner();
 
-    db.delete(id).await.unwrap();
+    db.delete(id).await?;
 
-    HttpResponse::Ok().finish()
+    Ok(HttpResponse::Ok().finish())
 }
 
 // TODO: change to query
 #[delete("/todos")]
-async fn delete_all_done(db: web::Data<Repository>) -> ActixResult<Markup> {
-    db.delete_all_done().await.unwrap();
+async fn delete_all_done(db: web::Data<Repository>) -> ApiResult<Markup> {
+    db.delete_all_done().await?;
 
-    let todos = db.get_all().await.unwrap();
+    let todos = db.get_all().await?;
 
     Ok(views::todos_view(todos))
 }
@@ -112,7 +110,7 @@ async fn delete_all_done(db: web::Data<Repository>) -> ActixResult<Markup> {
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
     dotenv::dotenv().ok();
-    let database = Repository::try_init().await.unwrap();
+    let database = Repository::init().await;
 
     println!("Starting server at http://localhost:8080");
     HttpServer::new(move || {
@@ -125,7 +123,7 @@ async fn main() -> std::io::Result<()> {
             .service(update)
             .service(delete)
             .service(delete_all_done)
-            .service(ActixFiles::new("/", "./src/static").prefer_utf8(true))
+            .service(actix_files::Files::new("/", "./src/static").prefer_utf8(true))
     })
     .bind(("127.0.0.1", 8080))?
     .run()
