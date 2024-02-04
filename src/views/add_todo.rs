@@ -8,6 +8,7 @@ pub fn add_todo_view() -> Markup {
                 hx-post="/todos"
                 hx-target="#todo-list"
                 hx-swap="afterbegin"
+                // Remove the value from the input after adding a new todo
                 hx-on="htmx:afterRequest: this.reset();"
             {
                 input class="flex-grow rounded-sm mx-1"
