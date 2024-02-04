@@ -1,5 +1,6 @@
 use serde::{Deserialize, Serialize};
 use sqlx::sqlite::SqlitePoolOptions;
+use sqlx::Result as SqlxResult;
 
 #[derive(Debug, Serialize, Deserialize, sqlx::FromRow)]
 pub struct Todo {
@@ -13,8 +14,6 @@ pub struct Repository {
     pool: sqlx::SqlitePool,
 }
 
-// Basic CRUD operations, nothing fancy here.
-// Feel free to add more methods if you need them.
 impl Repository {
     pub async fn try_init() -> anyhow::Result<Repository> {
         let database_url = std::env::var("DATABASE_URL")?;
@@ -27,7 +26,7 @@ impl Repository {
         Ok(Repository { pool })
     }
 
-    pub async fn insert(&self, text: String) -> Result<Todo, sqlx::Error> {
+    pub async fn insert(&self, text: String) -> SqlxResult<Todo> {
         sqlx::query_as!(
             Todo,
             r#"
@@ -41,7 +40,7 @@ impl Repository {
         .await
     }
 
-    pub async fn get_all(&self) -> Result<Vec<Todo>, sqlx::Error> {
+    pub async fn get_all(&self) -> SqlxResult<Vec<Todo>> {
         let todos = sqlx::query_as!(
             Todo,
             r#"
@@ -56,7 +55,7 @@ impl Repository {
         Ok(todos)
     }
 
-    pub async fn get_by_id(&self, id: i64) -> Result<Todo, sqlx::Error> {
+    pub async fn get_by_id(&self, id: i64) -> SqlxResult<Todo> {
         let todo = sqlx::query_as!(
             Todo,
             r#"
@@ -72,7 +71,7 @@ impl Repository {
         Ok(todo)
     }
 
-    pub async fn update(&self, todo: Todo) -> Result<Todo, sqlx::Error> {
+    pub async fn update(&self, todo: Todo) -> SqlxResult<Todo> {
         sqlx::query!(
             r#"
             UPDATE todos
@@ -89,7 +88,7 @@ impl Repository {
         Ok(todo)
     }
 
-    pub async fn delete(&self, id: i64) -> Result<(), sqlx::Error> {
+    pub async fn delete(&self, id: i64) -> SqlxResult<()> {
         sqlx::query!(
             r#"
             DELETE FROM todos
@@ -103,7 +102,7 @@ impl Repository {
         Ok(())
     }
 
-    pub async fn delete_all_done(&self) -> Result<(), sqlx::Error> {
+    pub async fn delete_all_done(&self) -> SqlxResult<()> {
         sqlx::query!(
             r#"
             DELETE FROM todos
