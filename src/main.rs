@@ -21,14 +21,14 @@ pub async fn index(db: web::Data<Repository>) -> ApiResult<Markup> {
                 }
                 div class="p-5 flex flex-col gap-4" {
                     (views::todos_view(todos))
-                    (views::clear_view())
+                    (views::delete_done_view())
                     (views::add_todo_view())
                 }
             }
         }
     };
 
-    Ok(views::base_view(title, content))
+    Ok(views::index_view(title, content))
 }
 
 #[derive(serde::Deserialize)]

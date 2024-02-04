@@ -1,8 +1,6 @@
 use maud::{html, Markup, DOCTYPE};
 
-// Feel free to update this function to your needs.
-// For styling, you can either put your own CSS in static/css/ or use Tailwind CSS.
-pub fn base_view(title: &str, content: Markup) -> Markup {
+pub fn index_view(title: &str, content: Markup) -> Markup {
     html! {
         (DOCTYPE)
         html class="no-js" lang="en" {
@@ -14,6 +12,7 @@ pub fn base_view(title: &str, content: Markup) -> Markup {
             body {
                 (content)
                 script src="https://unpkg.com/htmx.org@1.9.4" integrity="sha384-zUfuhFKKZCbHTY6aRR46gxiqszMk5tcHjsVFxnUo8VMus4kHGVdIYVbOYYNlKmHV" crossorigin="anonymous" {}
+                // TODO: do not use cdn
                 script src="https://cdn.tailwindcss.com" {}
             }
         }
